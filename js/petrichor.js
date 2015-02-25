@@ -75,20 +75,18 @@ var PETRICHOR = (function(my) {
   *****************************************************************************/
   function getOptimumCanvasSize() {
     var ratio = my.width / my.height,
+      maxWidth = window.getMaxWidth(),
+      maxHeight = Math.round(window.getMaxWidth() / ratio),
       result = {
-        width: window.getMaxWidth(),
-        height: Math.round(window.getMaxWidth() / ratio)
+        width: maxWidth,
+        height: maxHeight
       };
 
-    if (result.height > my.height) {
-      result.width = result.height * ratio;
-      if (Math.abs(my.width - window.getMaxWidth()) < 8) {
-        result.width = window.getMaxWidth();
-      }
-    } else {
-      if (Math.abs(my.height - window.getMaxHeight()) < 8) {
-        result.height = window.getMaxHeight();
-      }
+    result.height = result.width / ratio;
+
+    if(result.height > maxHeight) {
+      result.height = maxHeight;
+      result.width = Math.round(result.height * ratio);
     }
 
     return result;
@@ -172,9 +170,10 @@ var PETRICHOR = (function(my) {
   /**
    * Sets the music path and gives it to the resource container.
    */
-  my.setMusic = function(musicPath) {
+  my.setMusic = function(ogg, mp3) {
     my.resources.music = {
-      path: musicPath
+      ogg: ogg,
+      mp3: mp3
     };
   };
 
@@ -213,7 +212,7 @@ var PETRICHOR = (function(my) {
       switch (res.type) {
         case 'music':
           {
-            my.setMusic(res.path);
+            my.setMusic(res.ogg, res.mp3);
             break;
           }
         case 'mesh':

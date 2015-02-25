@@ -20,7 +20,7 @@
     var gl = PETRICHOR.gl;
 
     PETRICHOR.addResources([{type:'mesh', name:'suzanne', path:'data/monkey.json'},
-                            {type:'music', path: 'data/test.mp3'},
+                            {type:'music', mp3: 'data/test.mp3', ogg: 'data/test.ogg'},
                             {type:'program', name:'default',
                              vertexPath:'data/default_vert.glsl',
                              fragmentPath:'data/default_frag.glsl'},
@@ -121,7 +121,7 @@
         PETRICHOR.showFps("fps");
     }
 
-    // PETRICHOR.playMusic();
+    PETRICHOR.playMusic();
 </script>
 <p id="fps" style="color: #FFFFFF; position: fixed; left: 10px; top: 10px"></p>
 </body>

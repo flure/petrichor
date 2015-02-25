@@ -19,17 +19,32 @@ var PETRICHOR = (function(my) {
      * representing the loaded music.
      */
     my.loadMusic = function(resource) {
+        var oggSupport = false, mp3Support = false;
         console.log('Loading music...');
         if (!resource) {
             return;
         }
-        if (!resource.path) {
+        if ((!resource.ogg) && (!resource.mp3)) {
             console.log('No path for music.');
             return;
         }
         resource.audio = new Audio();
-        resource.audio.src = resource.path;
-        console.log('Music loaded.');
+        mp3Support = !!(resource.audio.canPlayType && 
+                        resource.audio.canPlayType('audio/mpeg;')
+                            .replace(/no/, ''));
+        oggSupport = !!(resource.audio.canPlayType && 
+                        resource.audio.canPlayType('audio/ogg; codecs="vorbis"')
+                            .replace(/no/, ''));
+        if(resource.hasOwnProperty('mp3') && mp3Support) {
+            resource.audio.src = resource.mp3;
+            console.log('Music loaded: MP3 format.');
+        } else if(resource.hasOwnProperty('ogg') && oggSupport) {
+            resource.audio.src = resource.ogg;
+            console.log('Music loaded: OGG format.');
+        } else {
+            console.log('Music not loaded: unsupported format.')
+        }
+        
         PETRICHOR.resources.loadCounter++;
     };
 
