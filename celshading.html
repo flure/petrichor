@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+
+
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf8">
@@ -11,6 +14,20 @@
 <script type="text/javascript" src="js/petrichor-light.js"></script>
 <script type="text/javascript" src="js/petrichor-fbo.js"></script>
 <script type="text/javascript" src="js/petrichor-util.js"></script>
+
+<style type="text/css">
+#ui {
+    color: #FFFFFF;
+    border: 2px solid #A00000;
+    background: background-color: rgba(0, 0, 0, 0.5);
+    font-family: verdana, sans-serif;
+    position: relative;
+    z-index:10;    
+    padding: 5px;
+    width: 200px;
+};
+
+</style>
 </head>
 
 <body style='background: black'>
@@ -118,11 +135,18 @@
         theta += 0.01;
         window.requestAnimFrame(drawSuzanne);
 
-        PETRICHOR.showFps("fps");
+        if(document.getElementById('chkFps').checked) {
+            PETRICHOR.showFps("fps");
+        } else {
+            document.getElementById('fps').innerHTML = '';
+        }
     }
-
-    PETRICHOR.playMusic();
+    
+    // PETRICHOR.playMusic();
 </script>
-<p id="fps" style="color: #FFFFFF; position: fixed; left: 10px; top: 10px"></p>
+<div id="ui">
+<p>Show FPS: <input type="checkbox" id="chkFps"/></p>
+<p id="fps"></p>
+</div>
 </body>
 </html>
