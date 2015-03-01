@@ -14,6 +14,7 @@
 <script type="text/javascript" src="js/petrichor-light.js"></script>
 <script type="text/javascript" src="js/petrichor-fbo.js"></script>
 <script type="text/javascript" src="js/petrichor-util.js"></script>
+<script type="text/javascript" src="js/petrichor-effect.js"></script>
 
 <style type="text/css">
 #ui {
@@ -57,89 +58,86 @@
     }
     wait();
     
-    var theta = 0.0;
-    var cam;
-    var prog;
-    var suzanne;
-    var fbo;
-    var quad;
-
     function prepare() {
-        cam = new PETRICHOR.Camera();
-        cam.far = 50.0;
-        prog = PETRICHOR.resources.programs['default'].program;
-        suzanne = PETRICHOR.resources.meshes['suzanne'].mesh;
+        PETRICHOR.addEffect(new PETRICHOR.Effect('suzanne', 
+                                                 initSuzanne, 
+                                                 updateSuzanne,
+                                                 true));
 
-        cam.setUniform('normalMatrix', 'uMatrices.normal');
-        cam.setUniform('viewMatrix', 'uMatrices.view');
-        cam.setUniform('modelMatrix', 'uMatrices.model');
-        cam.setUniform('projectionMatrix', 'uMatrices.projection');
-        cam.setUniform('mvpMatrix', 'uMatrices.MVP');
-        cam.setUniform('near', 'uNear');
-        cam.setUniform('far', 'uFar');
-        suzanne.setAttributeName('vertex', 'aVertex');
-        suzanne.setAttributeName('normal', 'aNormal');
-        suzanne.setAttributeName('uv', 'aTexCoord');
-        suzanne.setTexture(0, PETRICHOR.resources.textures['test'].texture, 'uDiffuseTex');
-
-        fbo = new PETRICHOR.Fbo(PETRICHOR.width, PETRICHOR.height);
-        fbo.build(true);
-
-        quad = new PETRICHOR.FullscreenQuad(false);
-        quad.program = PETRICHOR.resources.programs['edge_detect'].program;
-        quad.mesh.setAttributeName('vertex', 'aVertex');
-        quad.mesh.setAttributeName('uv', 'aTexCoord');
-        var size = vec2.fromValues(PETRICHOR.width, PETRICHOR.height);
-        quad.program.enable();
-        quad.program.setUniform2fv('uTextureSize', size);
-        quad.program.setUniform1f('uThreshHold', 0.01);
-
-        drawSuzanne();
+        PETRICHOR.start();
     }
+    
 
-    function drawSuzanne() {
-        var gl = PETRICHOR.gl;
+    function initSuzanne() {
+        this.cam = new PETRICHOR.Camera();
+        this.cam.far = 50.0;
+        this.cam.setUniform('normalMatrix', 'uMatrices.normal');
+        this.cam.setUniform('viewMatrix', 'uMatrices.view');
+        this.cam.setUniform('modelMatrix', 'uMatrices.model');
+        this.cam.setUniform('projectionMatrix', 'uMatrices.projection');
+        this.cam.setUniform('mvpMatrix', 'uMatrices.MVP');
+        this.cam.setUniform('near', 'uNear');
+        this.cam.setUniform('far', 'uFar');
 
-        fbo.begin();
-        gl.viewport(0, 0, PETRICHOR.width, PETRICHOR.height);
-        prog.enable();
-        gl.clearColor(0, 0, 1.0, 1);
-        gl.enable(gl.DEPTH_TEST);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this.prog = PETRICHOR.resources.programs['default'].program;
 
-        var light0 = new PETRICHOR.Light();
-        light0.setUniforms({'color': 'uLights[0].color',
+        this.suzanne = PETRICHOR.resources.meshes['suzanne'].mesh;
+        this.suzanne.setAttributeName('vertex', 'aVertex');
+        this.suzanne.setAttributeName('normal', 'aNormal');
+        this.suzanne.setAttributeName('uv', 'aTexCoord');
+        this.suzanne.setTexture(0, PETRICHOR.resources.textures['test'].texture, 'uDiffuseTex');
+
+        this.fbo = new PETRICHOR.Fbo(PETRICHOR.width, PETRICHOR.height);
+        this.fbo.build(true);
+
+        this.quad = new PETRICHOR.FullscreenQuad(false);
+        this.quad.program = PETRICHOR.resources.programs['edge_detect'].program;
+        this.quad.mesh.setAttributeName('vertex', 'aVertex');
+        this.quad.mesh.setAttributeName('uv', 'aTexCoord');
+        var size = vec2.fromValues(PETRICHOR.width, PETRICHOR.height);
+        this.quad.program.enable();
+        this.quad.program.setUniform2fv('uTextureSize', size);
+        this.quad.program.setUniform1f('uThreshHold', 0.01);
+
+        this.light = new PETRICHOR.Light();
+        this.light.setUniforms({'color': 'uLights[0].color',
                             'position': 'uLights[0].position',
                             'radius': 'uLights[0].radius'});
         // light.position = vec3.fromValues(3.0*Math.sin(theta), 3.0*Math.cos(theta), 0.0);
-        light0.position = vec3.fromValues(0.0, -1.0, 1.0);
-        light0.radius = 2.0;
-        light0.uploadParams(prog);
-        prog.setUniform1i('uNbLights', 1);
+        this.light.position = vec3.fromValues(0.0, -1.0, 1.0);
+        this.light.radius = 2.0;
+        this.light.uploadParams(this.prog);
+        this.prog.setUniform1i('uNbLights', 1);
+    }
 
-        cam.setPerspective();
-        cam.lookAt();
+    function updateSuzanne(time) {
+      var gl = PETRICHOR.gl;
 
-        suzanne.transform.setRotation(theta, theta, theta);
-        suzanne.transform.setTranslation(0.0, 0.0, -5.0 * Math.abs(Math.sin(theta/2.0)));
-        suzanne.render(prog, cam);
-        prog.disable();
-        fbo.end();
+      time /= 1000.0;
 
-        gl.clearColor(0, 1, 0.0, 1);
-        gl.viewport(0, 0, PETRICHOR.width, PETRICHOR.height);
-        gl.enable(gl.DEPTH_TEST);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        quad.render([{id:fbo.depthBuffer, sampler:'uDepthTex'},
-                     {id:fbo.colorBuffer, sampler:'uColorTex'}]);
-        theta += 0.01;
-        window.requestAnimFrame(drawSuzanne);
+      this.fbo.begin();
+      gl.viewport(0, 0, PETRICHOR.width, PETRICHOR.height);
+      this.prog.enable();
+      gl.clearColor(0, 0, 1.0, 1);
+      gl.enable(gl.DEPTH_TEST);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        if(document.getElementById('chkFps').checked) {
-            PETRICHOR.showFps("fps");
-        } else {
-            document.getElementById('fps').innerHTML = '';
-        }
+      this.cam.setPerspective();
+      this.cam.lookAt();
+
+      this.suzanne.transform.setRotation(time, time, time);
+      this.suzanne.transform.setTranslation(0.0, 0.0, -5.0 * Math.abs(Math.sin(time/2.0)));
+      this.suzanne.render(this.prog, this.cam);
+      this.prog.disable();
+      this.fbo.end();
+
+      gl.clearColor(0, 1, 0.0, 1);
+      gl.viewport(0, 0, PETRICHOR.width, PETRICHOR.height);
+      gl.enable(gl.DEPTH_TEST);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      this.quad.render([{id:this.fbo.depthBuffer, sampler:'uDepthTex'},
+                        {id:this.fbo.colorBuffer, sampler:'uColorTex'}]);
+      
     }
     
     // PETRICHOR.playMusic();
