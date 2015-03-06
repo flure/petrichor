@@ -6,7 +6,6 @@ as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
 */
 
 /*jshint globalstrict: true*/
-/*global mat4: false*/
 'use strict';
 
 var PETRICHOR = (function(my) {
@@ -14,19 +13,19 @@ var PETRICHOR = (function(my) {
 	my.FullscreenQuad = function (useDefaultShader) {
 		// Create the mesh
 		this.mesh = new my.Mesh();
-		this.mesh.vertices = new Float32Array([-1.0, -1.0, 0.0,  // DL
-																					 1.0, -1.0, 0.0,	 // DR
-																					 1.0, 1.0, 0.0,		 // UR
-																					 -1.0, -1.0, 0.0,  // DL
-																					 1.0, 1.0, 0.0,		 // UR	
-																					 -1.0, 1.0, 0.0]); // UL
+		this.mesh.vertices = [-1.0, -1.0, 0.0,  // DL
+													 1.0, -1.0, 0.0,	 // DR
+													 1.0, 1.0, 0.0,		 // UR
+													 -1.0, -1.0, 0.0,  // DL
+													 1.0, 1.0, 0.0,		 // UR	
+													 -1.0, 1.0, 0.0]; // UL
 
-		this.mesh.textureCoords = new Float32Array([0.0, 0.0,		// DL
-																								1.0, 0.0,		// DR
-																								1.0, 1.0,		// UR
-																								0.0, 0.0,		// DL
-																								1.0, 1.0,		// UR
-																								0.0, 1.0]); // UL
+		this.mesh.textureCoords = [0.0, 0.0,		// DL
+															1.0, 0.0,		// DR
+															1.0, 1.0,		// UR
+															0.0, 0.0,		// DL
+															1.0, 1.0,		// UR
+															0.0, 1.0]; // UL
 		this.mesh.build();
 
 		// Create the program for rendering this mesh
@@ -83,7 +82,7 @@ var PETRICHOR = (function(my) {
 	my.createCube = function () {
 		var cube = new my.Mesh();
 
-		cube.vertices = new Float32Array([
+		cube.vertices = [
 			// Front face
 			-1.0, 1.0, 1.0,			-1.0, -1.0, 1.0,			1.0, -1.0, 1.0,
 			-1.0, 1.0, 1.0,			1.0, -1.0, 1.0,			1.0, 1.0, 1.0,
@@ -102,9 +101,9 @@ var PETRICHOR = (function(my) {
 			// Left face
 			-1.0, 1.0, -1.0,			-1.0, -1.0, -1.0,			-1.0, -1.0, 1.0,
 			-1.0, 1.0, -1.0,			-1.0, -1.0, 1.0,			-1.0, 1.0, 1.0
-		]);
+		];
 
-		cube.normals = new Float32Array([
+		cube.normals = [
 			// Front face
 			0.0, 0.0, 1.0,			0.0, 0.0, 1.0,			0.0, 0.0, 1.0,
 			0.0, 0.0, 1.0,			0.0, 0.0, 1.0,			0.0, 0.0, 1.0,
@@ -123,9 +122,9 @@ var PETRICHOR = (function(my) {
 			// Left face
 			-1.0, 0.0, 0.0,			-1.0, 0.0, 0.0,			-1.0, 0.0, 0.0,
 			-1.0, 0.0, 0.0,			-1.0, 0.0, 0.0,			-1.0, 0.0, 0.0
-		]);
+		];
 
-		cube.textureCoords = new Float32Array([
+		cube.textureCoords = [
 			// Front face
 			0.0, 1.0,			0.0, 0.0,			1.0, 0.0,
 			0.0, 1.0,			1.0, 0.0,			1.0, 1.0,
@@ -144,11 +143,111 @@ var PETRICHOR = (function(my) {
 			// Left face
 			0.0, 1.0,			0.0, 0.0,			1.0, 0.0,
 			0.0, 1.0,			1.0, 0.0,			1.0, 1.0
-		]);
+		];
 
 		cube.build();
 
 		return cube;
+	};
+
+	my.createUvSphere = function (radius, nbLatitudes, nbLongitudes) {
+		var sphere,
+				v0, v1, v2, v3, uv0, uv1, uv2, uv3,
+				longitude, latitude,
+				theta, phi, dtheta, dphi, theta2, phi2,
+				sin = Math.sin,
+				cos = Math.cos,
+				pi = Math.PI,
+				pi2 = pi / 2.0;
+
+
+
+		function addVertex(vtx, uv) {
+			var invRadius = 1.0 / radius;
+			sphere.vertices.push(vtx[0]);
+			sphere.vertices.push(vtx[1]);
+			sphere.vertices.push(vtx[2]);
+
+			sphere.normals.push(vtx[0] * invRadius);
+			sphere.normals.push(vtx[1] * invRadius);
+			sphere.normals.push(vtx[2] * invRadius);
+
+			sphere.textureCoords.push(uv[0]);
+			sphere.textureCoords.push(uv[1]);
+		}
+
+		sphere = new my.Mesh();
+		sphere.vertices = [];
+		sphere.normals = [];
+		sphere.textureCoords = [];
+
+		dtheta = -pi / (nbLatitudes - 1);
+		dphi = 2.0 * pi / (nbLongitudes - 1);
+		phi = 0.0;
+		for(longitude = 0; longitude < nbLongitudes - 1; longitude++) {
+			theta = pi2;
+			phi2 = phi + dphi;
+			for(latitude = 0; latitude < nbLatitudes-1; latitude++) {
+				theta2 = theta + dtheta;
+				v0 = [
+					radius * cos(theta) * cos(phi),
+					radius * sin(theta),
+					radius * cos(theta) * sin(phi)
+				];
+				uv0 = [
+					(theta + pi2) / pi,
+					phi / (2.0*pi)
+				];
+
+				v1 = [
+					radius * cos(theta2) * cos(phi),
+					radius * sin(theta2),
+					radius * cos(theta2) * sin(phi)
+				];
+				uv1 = [
+					(theta2 + pi2) / pi,
+					phi / (2.0*pi)
+				];
+
+				v2 = [
+					radius * cos(theta2) * cos(phi2),
+					radius * sin(theta2),
+					radius * cos(theta2) * sin(phi2)
+				];
+				uv2 = [
+					(theta2 + pi2) / pi,
+					phi2 / (2.0*pi)
+				];
+
+				addVertex(v0, uv0);
+				addVertex(v1, uv1);
+				addVertex(v2, uv2);
+
+				if((latitude > 0) && (latitude < nbLatitudes-1)) {
+					v3 = [
+						radius * cos(theta) * cos(phi2),
+						radius * sin(theta),
+						radius * cos(theta) * sin(phi2)
+					];
+					uv3 = [
+						(theta + pi2) / pi,
+						phi2 / (2.0*pi)
+					];
+
+					addVertex(v0, uv0);
+					addVertex(v2, uv2);
+					addVertex(v3, uv3);
+				}
+
+
+				theta += dtheta;
+			}
+			phi += dphi;
+		}
+
+		sphere.build();
+
+		return sphere;
 	};
 
 	return my;
