@@ -19,16 +19,7 @@ module.exports = function(grunt) {
                 "*/\n"
             },
             // select the files to concatenate
-            src: ['src/petrichor.js',
-              'src/petrichor-util.js',
-              'src/petrichor-texture.js',
-              'src/petrichor-program.js',
-              'src/petrichor-music.js',
-              'src/petrichor-mesh.js',
-              'src/petrichor-light.js',
-              'src/petrichor-fbo.js',
-              'src/petrichor-effect.js',
-              'src/petrichor-camera.js'],
+            src: 'src/*.js',
             // the resulting JS file
             dest: 'build/petrichor.js'
           }
