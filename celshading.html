@@ -127,6 +127,9 @@
         this.sphere.setAttributeName('normal', 'aNormal');
         this.sphere.setAttributeName('uv', 'aTexCoord');
         this.sphere.setTexture(0, PETRICHOR.resources.textures['test'].texture, 'uDiffuseTex');
+
+        this.textTexture = PETRICHOR.renderText(512, ["VIP 2015"], 48, "bold 48px monospace", "rgb(255, 0, 0)", "rgb(0, 0, 255)");
+        this.cube.setTexture(0, this.textTexture, 'uDiffuseTex');
     }
 
     function updateSuzanne(time) {
@@ -145,16 +148,16 @@
       this.cam.setPerspective();
       this.cam.lookAt();
 
-      // this.suzanne.transform.setRotation(time, time, time);
+      // this.suzanne.transform.setRotation(0.0, time, 0.0);
       // this.suzanne.transform.setTranslation(0.0, 0.0, -5.0 * Math.abs(Math.sin(time/2.0)));
       // this.suzanne.render(this.prog, this.cam);
-      // this.cube.transform.setRotation(time, time, time);
+      this.cube.transform.setRotation(time, time, time);
       // this.cube.transform.setTranslation(0.0, 0.0, -5.0 * Math.abs(Math.sin(time/2.0)));
-      // this.cube.render(this.prog, this.cam);
-      this.sphere.transform.setRotation(time, 0.0, 0.0);
+      this.cube.render(this.prog, this.cam);
+      // this.sphere.transform.setRotation(time, 0.0, 0.0);
       // this.sphere.transform.setTranslation(0.0, 0.0, -5.0 * Math.abs(Math.sin(time/2.0)));
       // this.sphere.transform.setTranslation(0.0, time, 0.0);
-      this.sphere.render(this.prog, this.cam);
+      // this.sphere.render(this.prog, this.cam);
 
       this.prog.disable();
       this.fbo.end();
