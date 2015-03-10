@@ -38,6 +38,7 @@
                              vertexPath:'data/edge_vert.glsl',
                              fragmentPath:'data/edge_frag.glsl'},
                             {type:'texture', name:'test', path:'data/damier.jpg'}]);
+
     PETRICHOR.loadResources();
     function wait() {
         console.log('wait');
@@ -54,11 +55,11 @@
         PETRICHOR.addEffect(new PETRICHOR.Effect('suzanne', 
                                                  initSuzanne, 
                                                  updateSuzanne,
-                                                 true));
+                                                 true,
+                                                 0));
 
         PETRICHOR.start();
     }
-    
 
     function initSuzanne() {
         PETRICHOR.resources.textures['test'].texture.wrap = {

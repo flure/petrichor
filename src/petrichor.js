@@ -303,7 +303,7 @@ var PETRICHOR = (function(my) {
 
     if(total >= 1000) {
       fps = (my.fps.frameTimes.length * 1000.0 / total).toFixed(2);
-      document.getElementById(elemId).innerHTML = "" + fps + " fps";
+      document.getElementById(elemId).innerHTML = fps + ' fps';
       my.fps.currentFrame = 0;
       my.fps.frameTimes.length = 0;
     }
@@ -313,13 +313,14 @@ var PETRICHOR = (function(my) {
   };
 
   my.getExtension = function (extensionName) {
-    var prefixes = ['', 'MOZ_', 'WEBKIT_'], i, ext = null;
+    var prefixes = ['', 'MOZ_', 'WEBKIT_'], i, ext = null,
+      gl = PETRICHOR.gl;
     if(my.extensions.hasOwnProperty(extensionName)) {
       return my.extensions[extensionName];
     }
     for(i = 0; i < prefixes.length; i++) {
       ext = gl.getExtension(prefixes[i] + extensionName);
-      if(ext != null) break;
+      if(ext !== null) break;
     }
     my.extensions[extensionName] = ext;
     return ext;

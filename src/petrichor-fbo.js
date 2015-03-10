@@ -11,6 +11,11 @@ as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
 
 var PETRICHOR = (function(my) {
 
+  /**
+   * The object used to manage Framebuffer Objects (FBO).
+   * @param {Integer} width  The pixel width of the FBO
+   * @param {Integer} height The pixel height of the FBO
+   */
 	my.Fbo = function (width, height) {
 		this.frameBuffer = null;
 		this.colorBuffer = null;
@@ -18,6 +23,11 @@ var PETRICHOR = (function(my) {
 		this.width = width;
 		this.height = height;
 
+    /**
+     * Builds this FBO.
+     * @param  {Boolean} depthAsTexture Tells if we want to use the depth buffer
+     *                                  as a texture.
+     */
 		this.build = function (depthAsTexture) {
 			var gl = PETRICHOR.gl;			
 
@@ -105,6 +115,9 @@ var PETRICHOR = (function(my) {
 		  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		};
 
+    /**
+     * Begins rendering to this FBO.
+     */
 		this.begin = function () {
 			var gl = PETRICHOR.gl;
   		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
@@ -113,6 +126,9 @@ var PETRICHOR = (function(my) {
   		}
 		};
 
+    /**
+     * Ends rendering to this FBO, switches back to the default rendering target.
+     */
 		this.end = function () {
 			var gl = PETRICHOR.gl;
   		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
