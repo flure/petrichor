@@ -9,136 +9,133 @@ as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
 /*global mat4: false*/
 'use strict';
 
-var PETRICHOR = (function(my) {
+var PETRICHOR = PETRICHOR || {};
+
+/**
+ * The object used to manage Framebuffer Objects (FBO).
+ * @param {Integer} width  The pixel width of the FBO
+ * @param {Integer} height The pixel height of the FBO
+ */
+PETRICHOR.Fbo = function(width, height) {
+  this.frameBuffer = null;
+  this.colorBuffer = null;
+  this.depthBuffer = null;
+  this.width = width;
+  this.height = height;
 
   /**
-   * The object used to manage Framebuffer Objects (FBO).
-   * @param {Integer} width  The pixel width of the FBO
-   * @param {Integer} height The pixel height of the FBO
+   * Builds this FBO.
+   * @param  {Boolean} depthAsTexture Tells if we want to use the depth buffer
+   *                                  as a texture.
    */
-	my.Fbo = function (width, height) {
-		this.frameBuffer = null;
-		this.colorBuffer = null;
-		this.depthBuffer = null;
-		this.width = width;
-		this.height = height;
+  this.build = function(depthAsTexture) {
+    var gl = PETRICHOR.gl;
 
-    /**
-     * Builds this FBO.
-     * @param  {Boolean} depthAsTexture Tells if we want to use the depth buffer
-     *                                  as a texture.
-     */
-		this.build = function (depthAsTexture) {
-			var gl = PETRICHOR.gl;			
+    // creation of fbo
+    this.frameBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    if (gl.getError() != gl.NO_ERROR) {
+      alert('Error in gl.bindFramebuffer');
+    }
 
-			// creation of fbo
-			this.frameBuffer = gl.createFramebuffer();
-  		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-  		if(gl.getError() != gl.NO_ERROR) {
-  			alert('Error in gl.bindFramebuffer');
-  		}
+    // creation of render target
+    this.colorBuffer = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.colorBuffer);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, this.width, this.height, 0,
+      gl.RGB, gl.UNSIGNED_BYTE, null);
+    if (gl.getError() != gl.NO_ERROR) {
+      alert('Error in creating the fbo color buffer');
+    }
 
-  		// creation of render target
-  		this.colorBuffer = gl.createTexture();
-  		gl.bindTexture(gl.TEXTURE_2D, this.colorBuffer);
-  		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, this.width, this.height, 0,
-		                  gl.RGB, gl.UNSIGNED_BYTE, null);
-		  if(gl.getError() != gl.NO_ERROR) {
-  			alert('Error in creating the fbo color buffer');
-  		}
-		  
-		  // creation of depth buffer
-      if(depthAsTexture) {
-        // creation as a texture
-        var ext = my.getExtension('WEBGL_depth_texture');
-        if(ext == null) {
-          alert('WEBGL_depth_texture extension required.\n' +
-                'Please switch to a modern browser.');
-          return;
-        }
-        this.depthBuffer = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.depthBuffer);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 
-                      this.width, this.height, 0, gl.DEPTH_COMPONENT, 
-                      gl.UNSIGNED_SHORT, null);
-
-        if(gl.getError() != gl.NO_ERROR) {
-          alert('Error in creating the fbo depth buffer');
-        }
-      } else {
-    		this.depthBuffer = gl.createRenderbuffer();
-    		gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthBuffer);
-    		if(gl.getError() != gl.NO_ERROR) {
-    			alert('Error in gl.bindRenderbuffer');
-    		}
-    		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 
-    														this.width, this.height);
+    // creation of depth buffer
+    if (depthAsTexture) {
+      // creation as a texture
+      var ext = PETRICHOR.getExtension('WEBGL_depth_texture');
+      if (ext == null) {
+        alert('WEBGL_depth_texture extension required.\n' +
+          'Please switch to a modern browser.');
+        return;
       }
-  		if(gl.getError() != gl.NO_ERROR) {
-  			alert('Error in gl.renderbufferStorage');
-  		}
+      this.depthBuffer = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this.depthBuffer);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT,
+        this.width, this.height, 0, gl.DEPTH_COMPONENT,
+        gl.UNSIGNED_SHORT, null);
 
-		  // attach render target
- 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-  															gl.TEXTURE_2D, this.colorBuffer, 0); 		
-  		if(gl.getError() != gl.NO_ERROR) {
-  			alert('Error attaching color buffer');
-  		}	
-
- 			// attach depth buffer
-      if(depthAsTexture) {
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 
-                                gl.TEXTURE_2D, this.depthBuffer, 0);
-      } else {
-    		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 
-    																gl.RENDERBUFFER, this.depthBuffer);
+      if (gl.getError() != gl.NO_ERROR) {
+        alert('Error in creating the fbo depth buffer');
       }
-      if(gl.getError() != gl.NO_ERROR) {
-        alert('Error attaching depth buffer');
+    } else {
+      this.depthBuffer = gl.createRenderbuffer();
+      gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthBuffer);
+      if (gl.getError() != gl.NO_ERROR) {
+        alert('Error in gl.bindRenderbuffer');
       }
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16,
+        this.width, this.height);
+    }
+    if (gl.getError() != gl.NO_ERROR) {
+      alert('Error in gl.renderbufferStorage');
+    }
+
+    // attach render target
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D, this.colorBuffer, 0);
+    if (gl.getError() != gl.NO_ERROR) {
+      alert('Error attaching color buffer');
+    }
+
+    // attach depth buffer
+    if (depthAsTexture) {
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+        gl.TEXTURE_2D, this.depthBuffer, 0);
+    } else {
+      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+        gl.RENDERBUFFER, this.depthBuffer);
+    }
+    if (gl.getError() != gl.NO_ERROR) {
+      alert('Error attaching depth buffer');
+    }
 
 
-  		if(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-  			alert('Error in FBO creation');
-  		}
-    
-  		gl.bindTexture(gl.TEXTURE_2D, null);
-		  gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-		  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		};
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+      alert('Error in FBO creation');
+    }
 
-    /**
-     * Begins rendering to this FBO.
-     */
-		this.begin = function () {
-			var gl = PETRICHOR.gl;
-  		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-  		if(gl.getError() != gl.NO_ERROR) {
-  			alert('Error in Fbo.begin');
-  		}
-		};
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  };
 
-    /**
-     * Ends rendering to this FBO, switches back to the default rendering target.
-     */
-		this.end = function () {
-			var gl = PETRICHOR.gl;
-  		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  		if(gl.getError() != gl.NO_ERROR) {
-  			alert('Error in Fbo.end');
-  		}
-		};
+  /**
+   * Begins rendering to this FBO.
+   */
+  this.begin = function() {
+    var gl = PETRICHOR.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    if (gl.getError() != gl.NO_ERROR) {
+      alert('Error in Fbo.begin');
+    }
+  };
 
-		return this;
-	};
+  /**
+   * Ends rendering to this FBO, switches back to the default rendering target.
+   */
+  this.end = function() {
+    var gl = PETRICHOR.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    if (gl.getError() != gl.NO_ERROR) {
+      alert('Error in Fbo.end');
+    }
+  };
 
-	return my;
-}(PETRICHOR || {}));
+  return this;
+};
