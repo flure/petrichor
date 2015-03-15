@@ -8,7 +8,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     //S4:The Concate Task
     concat: {
-      dist: {
+      build: {
         options: {
           separator: '\n\r',
           banner: "/*\n" +
@@ -43,6 +43,7 @@ module.exports = function(grunt) {
           "*/\n"
           // banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
       },
+      
       build: {
         src: ['build/petrichor.js'],
         dest: 'build/petrichor-min.js'
@@ -59,6 +60,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
-  grunt.registerTask('default', ['concat', 'uglify']);
-  // grunt.registerTask('with_libs', ['concat:with_libs', 'uglify:with_libs']);
+  grunt.registerTask('default', ['concat', 'uglify']); 
 };
