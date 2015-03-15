@@ -75,9 +75,9 @@ PETRICHOR.initEffects = function() {
  * of each effect. Ordering the effects when adding them is important for
  * effects which timings overlap.
  */
-PETRICHOR.playEffects = function() {
+PETRICHOR.playEffects = function(currentTime) {
 	var i = 0,
-		time = new Date().getTime() - PETRICHOR.time,
+		time = currentTime || (new Date().getTime() - PETRICHOR.time),
 		fx = null;
 
 	for (i = 0; i < PETRICHOR.effects.length; i++) {
@@ -93,20 +93,21 @@ PETRICHOR.playEffects = function() {
  */
 PETRICHOR.start = function() {
 	PETRICHOR.initEffects();
-	PETRICHOR.play();
+	(function play () {
+		PETRICHOR.play();
+		window.requestAnimFrame(play, document);
+	})();
 };
 
 /**
  * Plays all the effects in order.
  */
-PETRICHOR.play = function() {
+PETRICHOR.play = function(currentTime) {
 	if (document.getElementById('chkFps').checked) {
-		PETRICHOR.showFps("fps");
+		PETRICHOR.showFps('fps');
 	} else {
 		document.getElementById('fps').innerHTML = '';
 	}
 
-	window.requestAnimFrame(PETRICHOR.play, document);
-
-	PETRICHOR.playEffects();
+	PETRICHOR.playEffects(currentTime);
 };

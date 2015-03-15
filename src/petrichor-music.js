@@ -10,6 +10,8 @@ as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
 'use strict';
 
 var PETRICHOR = PETRICHOR || {};
+
+PETRICHOR.music = null;
 /**
  * Loads a music from a resource object describing it.
  * @param  {object} resource The object describing the music. It must have
@@ -46,12 +48,8 @@ PETRICHOR.loadMusic = function(resource) {
         console.log('Music not loaded: unsupported format.')
     }
 
+    PETRICHOR.music = PETRICHOR.resources.music.audio;
+
     PETRICHOR.resources.loadCounter++;
 };
 
-/**
- * Starts the playing of the music.
- */
-PETRICHOR.playMusic = function() {
-    PETRICHOR.resources.music.audio.play();
-};
