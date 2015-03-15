@@ -5,3 +5,4 @@ You can see it in action here http://florent.cure.free.fr/files/demos/wip/celsha
 
 uses :
 - gl-matrix (https://github.com/toji/gl-matrix)
+- jsRocket (https://github.com/mog/jsRocket)
