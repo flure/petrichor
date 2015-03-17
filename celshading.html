@@ -59,7 +59,7 @@
                                                  0));
 
         // PETRICHOR.start();
-        PETRICHOR.initSync('data/test.rocket', 170, 8, false, null,
+        PETRICHOR.initSync('data/petrichor.rocket', 170, 8, false, null,
             ['rotX', 'rotY']);
     }
 
@@ -144,7 +144,7 @@
       this.cam.lookAt();
 
       var rotX = PETRICHOR.sync.getTrack('rotX');
-      var rotY = PETRICHOR.sync.getTrack('rotY');
+      var rotY = PETRICHOR.sync.getTrack('rotY') / 180.0 * Math.PI;
       // this.suzanne.transform.setRotation(0.0, time, 0.0);
       // this.suzanne.transform.setTranslation(0.0, 0.0, -5.0 * Math.abs(Math.sin(time/2.0)));
       // this.suzanne.render(this.prog, this.cam);
