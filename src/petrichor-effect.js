@@ -23,25 +23,6 @@ var PETRICHOR = PETRICHOR || {};
  * @param {Integer} startTime      The beginning of the effect in ms
  * @param {Integer} endTime        The end of the effect in ms
  */
-PETRICHOR.Effect = function(name, initCallback, updateCallback, loop, startTime, endTime) {
-	this.name = name;
-	this.initCallback = initCallback;
-	this.updateCallback = updateCallback;
-	this.startTime = startTime;
-	this.endTime = endTime;
-	this.loop = loop;
-
-	this.init = function() {
-		console.log('Initializing effect "' + this.name + '"...');
-		this.initCallback();
-	};
-
-	this.update = function(time) {
-		this.updateCallback(time);
-	};
-
-	return this;
-};
 
 /**
  * The list of effects for this demo.
@@ -50,6 +31,13 @@ PETRICHOR.effects = [];
 
 /**
  * Add an effect fx to the list.
+ * An effect is an object with the following keys :
+ * - name : The name of the effect.
+ * - init : A function which is called at the initialization of the demo.
+ * - update : A function(time) which is called at each frame during the effect's time.
+ * - loop : A boolean, indicates if the effect must loop endlessly.
+ * - startTime : The beginning time of the effect, in ms.
+ * - endTime : The ending time of the effect, in ms.
  */
 PETRICHOR.addEffect = function(fx) {
 	PETRICHOR.effects.push(fx);
@@ -78,11 +66,15 @@ PETRICHOR.initEffects = function() {
 PETRICHOR.playEffects = function(currentTime) {
 	var i = 0,
 		time = currentTime || (new Date().getTime() - PETRICHOR.time),
-		fx = null;
+		fx = null,
+		startTime, endTime, loop;
 
 	for (i = 0; i < PETRICHOR.effects.length; i++) {
 		fx = PETRICHOR.effects[i];
-		if ((fx.startTime <= time) && (fx.loop || (fx.endTime >= time))) {
+		startTime = fx.startTime || 0;
+		endTime = fx.endTime || 99999;
+		loop = fx.loop || false;
+		if ((startTime <= time) && (loop || (endTime >= time))) {
 			fx.update(time);
 		}
 	}
@@ -103,10 +95,14 @@ PETRICHOR.start = function() {
  * Plays all the effects in order.
  */
 PETRICHOR.play = function(currentTime) {
-	if (document.getElementById('chkFps').checked) {
-		PETRICHOR.showFps('fps');
-	} else {
-		document.getElementById('fps').innerHTML = '';
+	var chkFps = document.getElementById('chkFps'),
+			fps = document.getElementById('fps');
+	if ((chkFps != undefined) && (fps != undefined)) {
+		if (document.getElementById('chkFps').checked) {
+			PETRICHOR.showFps('fps');
+		} else {
+			fps.innerHTML = '';
+		}
 	}
 
 	PETRICHOR.playEffects(currentTime);
