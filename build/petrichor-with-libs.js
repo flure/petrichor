@@ -159,25 +159,6 @@ var PETRICHOR = PETRICHOR || {};
  * @param {Integer} startTime      The beginning of the effect in ms
  * @param {Integer} endTime        The end of the effect in ms
  */
-PETRICHOR.Effect = function(name, initCallback, updateCallback, loop, startTime, endTime) {
-	this.name = name;
-	this.initCallback = initCallback;
-	this.updateCallback = updateCallback;
-	this.startTime = startTime;
-	this.endTime = endTime;
-	this.loop = loop;
-
-	this.init = function() {
-		console.log('Initializing effect "' + this.name + '"...');
-		this.initCallback();
-	};
-
-	this.update = function(time) {
-		this.updateCallback(time);
-	};
-
-	return this;
-};
 
 /**
  * The list of effects for this demo.
@@ -186,6 +167,13 @@ PETRICHOR.effects = [];
 
 /**
  * Add an effect fx to the list.
+ * An effect is an object with the following keys :
+ * - name : The name of the effect.
+ * - init : A function which is called at the initialization of the demo.
+ * - update : A function(time) which is called at each frame during the effect's time.
+ * - loop : A boolean, indicates if the effect must loop endlessly.
+ * - startTime : The beginning time of the effect, in ms.
+ * - endTime : The ending time of the effect, in ms.
  */
 PETRICHOR.addEffect = function(fx) {
 	PETRICHOR.effects.push(fx);
@@ -214,11 +202,15 @@ PETRICHOR.initEffects = function() {
 PETRICHOR.playEffects = function(currentTime) {
 	var i = 0,
 		time = currentTime || (new Date().getTime() - PETRICHOR.time),
-		fx = null;
+		fx = null,
+		startTime, endTime, loop;
 
 	for (i = 0; i < PETRICHOR.effects.length; i++) {
 		fx = PETRICHOR.effects[i];
-		if ((fx.startTime <= time) && (fx.loop || (fx.endTime >= time))) {
+		startTime = fx.startTime || 0;
+		endTime = fx.endTime || 99999;
+		loop = fx.loop || false;
+		if ((startTime <= time) && (loop || (endTime >= time))) {
 			fx.update(time);
 		}
 	}
@@ -239,10 +231,14 @@ PETRICHOR.start = function() {
  * Plays all the effects in order.
  */
 PETRICHOR.play = function(currentTime) {
-	if (document.getElementById('chkFps').checked) {
-		PETRICHOR.showFps('fps');
-	} else {
-		document.getElementById('fps').innerHTML = '';
+	var chkFps = document.getElementById('chkFps'),
+			fps = document.getElementById('fps');
+	if ((chkFps != undefined) && (fps != undefined)) {
+		if (document.getElementById('chkFps').checked) {
+			PETRICHOR.showFps('fps');
+		} else {
+			fps.innerHTML = '';
+		}
 	}
 
 	PETRICHOR.playEffects(currentTime);
@@ -648,13 +644,11 @@ PETRICHOR.Transform = function() {
   this.rotation = vec3.create();
   this.scale = vec3.fromValues(1.0, 1.0, 1.0);
   this.transformMatrix = mat4.create();
-  this.dirty = false;
 
   this.setTranslation = function(x, y, z) {
     this.translation[0] = x;
     this.translation[1] = y;
     this.translation[2] = z;
-    this.dirty = true;
     return this;
   };
 
@@ -662,7 +656,6 @@ PETRICHOR.Transform = function() {
     this.rotation[0] = x;
     this.rotation[1] = y;
     this.rotation[2] = z;
-    this.dirty = true;
     return this;
   };
 
@@ -670,35 +663,31 @@ PETRICHOR.Transform = function() {
     this.scale[0] = x;
     this.scale[1] = y;
     this.scale[2] = z;
-    this.dirty = true;
     return this;
   };
 
   this.getTransformationMatrix = function() {
     var translationMat = mat4.create(),
       rotationMat = mat4.create(),
-      scaleMat = mat4.create();
+      scaleMat = mat4.create(),
+      quatX = quat.create(),
+      quatY = quat.create(),
+      quatZ = quat.create(),
+      quatTemp = quat.create(),
+      rotQuat = quat.create();
 
-    if (!this.dirty) {
-      return this.transformMatrix;
-    }
+    quat.identity(rotQuat);
+    quat.rotateX(rotQuat, rotQuat, this.rotation[0]);
+    quat.rotateY(rotQuat, rotQuat, this.rotation[1]);
+    quat.rotateZ(rotQuat, rotQuat, this.rotation[2]);
 
-    mat4.identity(rotationMat);
-    mat4.rotateX(rotationMat, rotationMat, this.rotation[0]);
-    mat4.rotateY(rotationMat, rotationMat, this.rotation[1]);
-    mat4.rotateZ(rotationMat, rotationMat, this.rotation[2]);
+    quat.normalize(rotQuat, rotQuat);
 
-    mat4.translate(translationMat, translationMat, this.translation);
+    mat4.fromRotationTranslation(this.transformMatrix, rotQuat, this.translation);
 
     mat4.scale(scaleMat, scaleMat, this.scale);
 
-    mat4.identity(this.transformMatrix);
     mat4.multiply(this.transformMatrix, this.transformMatrix, scaleMat);
-    mat4.multiply(this.transformMatrix, this.transformMatrix, translationMat);
-    mat4.multiply(this.transformMatrix, this.transformMatrix, rotationMat);
-
-
-    this.dirty = false;
 
     return this.transformMatrix;
   };
@@ -1337,7 +1326,8 @@ PETRICHOR.FullscreenQuad = function(useDefaultShader) {
 		-1.0, 1.0, 0.0
 	]; // UL
 
-	this.mesh.textureCoords = [0.0, 0.0, // DL
+	this.mesh.textureCoords = [
+	  0.0, 0.0, // DL
 		1.0, 0.0, // DR
 		1.0, 1.0, // UR
 		0.0, 0.0, // DL
@@ -1564,6 +1554,8 @@ PETRICHOR.createUvSphere = function(radius, nbLatitudes, nbLongitudes) {
 	return sphere;
 };
 
+
+
 PETRICHOR.renderText = function(textureSize, textLines, textHeight, fontStyle, fillColor, strikeColor) {
 	var texture = new PETRICHOR.Texture2D(),
 		canvas = null,
@@ -1658,8 +1650,8 @@ PETRICHOR.init = function(options) {
 
   function getOptimumCanvasSize() {
     var ratio = PETRICHOR.width / PETRICHOR.height,
-      maxWidth = window.clientWidth,
-      maxHeight = Math.round(window.clientWidth / ratio),
+      maxWidth = window.clientWidth(),
+      maxHeight = Math.round(window.clientWidth() / ratio),
       result = {
         width: maxWidth,
         height: maxHeight
@@ -1668,7 +1660,7 @@ PETRICHOR.init = function(options) {
     result.height = result.width / ratio;
 
     if (result.height > maxHeight) {
-      result.height = maxHeight;
+      result.height = maxHeight - 8;
       result.width = Math.round(result.height * ratio);
     }
 
@@ -1682,9 +1674,9 @@ PETRICHOR.init = function(options) {
     PETRICHOR.mainCanvas.style.height = optimumDimensions.height + 'px';
 
     PETRICHOR.mainCanvas.style.position = 'absolute';
-    PETRICHOR.mainCanvas.style.top = (Math.round((window.clientHeight -
+    PETRICHOR.mainCanvas.style.top = (Math.round((window.clientHeight() -
       optimumDimensions.height) / 2) - 1) + 'px';
-    PETRICHOR.mainCanvas.style.left = (Math.round((window.clientWidth -
+    PETRICHOR.mainCanvas.style.left = (Math.round((window.clientWidth() -
       optimumDimensions.width) / 2) - 1) + 'px';
   }
 
