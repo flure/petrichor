@@ -58,8 +58,8 @@ PETRICHOR.init = function(options) {
 
   function getOptimumCanvasSize() {
     var ratio = PETRICHOR.width / PETRICHOR.height,
-      maxWidth = window.clientWidth,
-      maxHeight = Math.round(window.clientWidth / ratio),
+      maxWidth = window.clientWidth(),
+      maxHeight = Math.round(window.clientWidth() / ratio),
       result = {
         width: maxWidth,
         height: maxHeight
@@ -68,7 +68,7 @@ PETRICHOR.init = function(options) {
     result.height = result.width / ratio;
 
     if (result.height > maxHeight) {
-      result.height = maxHeight;
+      result.height = maxHeight - 8;
       result.width = Math.round(result.height * ratio);
     }
 
@@ -82,9 +82,9 @@ PETRICHOR.init = function(options) {
     PETRICHOR.mainCanvas.style.height = optimumDimensions.height + 'px';
 
     PETRICHOR.mainCanvas.style.position = 'absolute';
-    PETRICHOR.mainCanvas.style.top = (Math.round((window.clientHeight -
+    PETRICHOR.mainCanvas.style.top = (Math.round((window.clientHeight() -
       optimumDimensions.height) / 2) - 1) + 'px';
-    PETRICHOR.mainCanvas.style.left = (Math.round((window.clientWidth -
+    PETRICHOR.mainCanvas.style.left = (Math.round((window.clientWidth() -
       optimumDimensions.width) / 2) - 1) + 'px';
   }
 
