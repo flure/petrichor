@@ -190,13 +190,11 @@ PETRICHOR.Transform = function() {
   this.rotation = vec3.create();
   this.scale = vec3.fromValues(1.0, 1.0, 1.0);
   this.transformMatrix = mat4.create();
-  this.dirty = false;
 
   this.setTranslation = function(x, y, z) {
     this.translation[0] = x;
     this.translation[1] = y;
     this.translation[2] = z;
-    this.dirty = true;
     return this;
   };
 
@@ -204,7 +202,6 @@ PETRICHOR.Transform = function() {
     this.rotation[0] = x;
     this.rotation[1] = y;
     this.rotation[2] = z;
-    this.dirty = true;
     return this;
   };
 
@@ -212,35 +209,31 @@ PETRICHOR.Transform = function() {
     this.scale[0] = x;
     this.scale[1] = y;
     this.scale[2] = z;
-    this.dirty = true;
     return this;
   };
 
   this.getTransformationMatrix = function() {
     var translationMat = mat4.create(),
       rotationMat = mat4.create(),
-      scaleMat = mat4.create();
+      scaleMat = mat4.create(),
+      quatX = quat.create(),
+      quatY = quat.create(),
+      quatZ = quat.create(),
+      quatTemp = quat.create(),
+      rotQuat = quat.create();
 
-    if (!this.dirty) {
-      return this.transformMatrix;
-    }
+    quat.identity(rotQuat);
+    quat.rotateX(rotQuat, rotQuat, this.rotation[0]);
+    quat.rotateY(rotQuat, rotQuat, this.rotation[1]);
+    quat.rotateZ(rotQuat, rotQuat, this.rotation[2]);
 
-    mat4.identity(rotationMat);
-    mat4.rotateX(rotationMat, rotationMat, this.rotation[0]);
-    mat4.rotateY(rotationMat, rotationMat, this.rotation[1]);
-    mat4.rotateZ(rotationMat, rotationMat, this.rotation[2]);
+    quat.normalize(rotQuat, rotQuat);
 
-    mat4.translate(translationMat, translationMat, this.translation);
+    mat4.fromRotationTranslation(this.transformMatrix, rotQuat, this.translation);
 
     mat4.scale(scaleMat, scaleMat, this.scale);
 
-    mat4.identity(this.transformMatrix);
     mat4.multiply(this.transformMatrix, this.transformMatrix, scaleMat);
-    mat4.multiply(this.transformMatrix, this.transformMatrix, translationMat);
-    mat4.multiply(this.transformMatrix, this.transformMatrix, rotationMat);
-
-
-    this.dirty = false;
 
     return this.transformMatrix;
   };
